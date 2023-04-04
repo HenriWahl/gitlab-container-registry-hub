@@ -1,0 +1,30 @@
+{% if search_results %}
+    <!-- col-12 is important to use full width also for lazy-loaded rows -->
+    <div class="col-12 mt-2">
+        {% for container_image in search_results %}
+            <div class="row"
+                    {% if loop.index== loop.length and page
+    < pages_count %}
+                 hx-get="/search/{{ search_string }}"
+                 hx-trigger="revealed"
+                 hx-target="#end_of_page_{{ page }}"
+                 hx-swap="outerHTML"
+                 hx-vals='{"page": "{{ page + 1 }}", "mode": "scroll"}'
+                    {% endif %}
+            >
+                {% include 'search/card.html' %}
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="row pt-5">
+        {% if update_status.initialized %}
+            {% if search_results_count == 0 %}
+                {% include 'search/results/none.html' %}
+            {% endif %}
+        {% else %}
+            {% include 'search/results/update.html' %}
+        {% endif %}
+    </div>
+{% endif %}
+<div id="end_of_page_{{ page }}"></div>

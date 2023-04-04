@@ -1,0 +1,27 @@
+{% set progress_percent = 100 // update_status.number_of_stages * update_status.number_of_current_stage
+|
+int %}
+{% if update_status.number_of_current_stage < update_status.number_of_stages %}
+{% set target = 'this' %}
+{% set url = '/health/progress' %}
+{% set swap = 'outerHTML' %}
+{% else %}
+{% set target = '#content' %}
+{% set url = '/search/' %}
+{% set swap = 'innerHTML' %}
+{% endif %}
+
+<span hx-target="{{ target }}"
+      hx-get="{{ url }}"
+      hx-trigger="load delay:500ms"
+      hx-swap="{{ swap }}">
+
+{{ update_status.number_of_current_stage }}/{{ update_status.number_of_stages }} {{
+update_status.current_stage }}
+
+    <div class="progress mt-3">
+    <div class="progress-bar" role="progressbar" style="width: {{ progress_percent }}%"
+         aria-valuenow="{{ progress_percent }}" aria-valuemin="0"
+         aria-valuemax="100"></div>
+</div>
+</span>

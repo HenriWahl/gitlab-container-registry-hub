@@ -1,0 +1,12 @@
+{% if container_image['tags_count'] <= 1 %}
+{% set tag_icon = 'bi-tag-fill' %}
+{% set tag_string = 'tag' %}
+{% else %}
+{% set tag_icon = 'bi-tags-fill' %}
+{% set tag_string = 'tags' %}
+{% endif %}
+<div>
+    <i class="bi {{ tag_icon }}"></i> {{ container_image['tags_count'] }} {{
+    tag_string
+    }}
+</div>

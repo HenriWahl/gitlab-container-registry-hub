@@ -1,0 +1,52 @@
+<div class="col">
+    <div class="card bg-white my-2">
+        <div class="card-body">
+            <div class="row">
+                <div class="col">
+                    <div class="row">
+                        <div class="col">
+                            <h5>
+                                <a href="/container_image/{{ container_image['id'] }}"
+                                   hx-boost="true"
+                                   hx-get="/container_image/{{ container_image['id'] }}"
+                                   hx-target="#content"
+                                   hx-push-url="true"
+                                   hx-vals='{"search_string": "{{ search_string }}"}'
+{#                                   hx-swap="innerHTML show:#top:top"#}
+                                   hx-swap="innerHTML show:window:top"
+                                   title="click for details"
+                                >
+                                    {{ container_image['path'] | highlight(search_string) | safe }}
+                                </a>
+                            </h5>
+                        </div>
+                    </div>
+                    <div class="row my-2">
+                        <div class="col text-secondary">
+                            {{ container_image['project']['description']}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row my-2">
+                <div class="col-3">
+                    {% include 'container_image/meta.html' %}
+                </div>
+                <div class="col-9">
+                    <div class="row">
+                        <div class="col mb-2">
+                            {% include 'container_image/tag_freshest.html' %}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            {% set image_tag = container_image['location'] + ':' +
+                            container_image['last_update_tag'] %}
+                            {% include 'container_image/tag_clipboard.html' %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

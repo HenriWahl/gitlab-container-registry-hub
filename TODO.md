@@ -1,0 +1,44 @@
+ TODO
+
+- [x] Infinite Scroll
+- [ ] Navbar
+  - [x] fixed
+  - [ ] filters
+- [ ] Cards in search results with details
+  - [ ] Logo
+  - [ ] Contributors - https://docs.gitlab.com/ee/api/repositories.html#contributors
+  - [ ] Cleanup policy
+- [x] Card details page
+  - [x] README
+  - [x] Tags
+- [ ] Statistics
+- [x] URL in browser
+- [ ] Convinience
+  - [X] copy container image URL to clipboard
+  - [x] Tooltips
+  - [x] Filter for tags
+  - [ ] Navigation
+  - [x] Navbar horizontal
+  - [x] scroll up on click
+  - [x] typeahead
+  - [x] mark identical hashes
+  - [ ] mark if public or private
+  - [x] only mark latest copied URL as copied
+- [ ] /ping route for Kubernetes Liveness/Readyness tests
+- [ ] Security
+  - [ ] /
+  - [ ] ~~SECRET_KEY~~
+  - [ ] GET and POST needed everywhere?
+    - [ ] avoid URLs getting interpreted as HTMX
+- [ ] Stability
+  - [ ] survive failed collection
+- [x] update interval configurable
+  - [x] feedback if syncing at start
+  - [ ] show age of data
+- [x] GCR-Hub logo
+- [ ] Bugs
+  - [x] search string ending with '/' lets scrolling start by all results
+  - [x] not possible to insert clipboard into search form
+- [ ] Ideas
+  - find usage per image by evaluating Dockerfiles and docker-compose.yml files of all projects aka "where used"  
+- [ ] Logging

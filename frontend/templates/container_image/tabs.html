@@ -1,0 +1,32 @@
+<div id="container_registry_tabs">
+    <div class="row">
+        <div class="col">
+            <div class="btn-group-lg btn-group-vertical float-start me-3" role="group">
+                {% for container_image_tab in container_image_TABS %}
+                <input type="radio"
+                       class="btn-check"
+                       name="sort_by"
+                       id="sort_by_{{ sort_by }}"
+                       autocomplete="off"
+                                              {% if tab == container_image_tab %}
+                       checked
+                       {% endif %}
+                >
+                <label class="btn btn-outline-primary"
+                       for="sort_by_{{ sort_by }}"
+                       hx-get="/container_image/{{ container_image_id }}/tab/{{ container_image_tab }}"
+                       hx-target="#container_registry_tabs"
+                       hx-swap="innerHTML"
+                >
+                    <i class="bi bi-custom-{{ container_image_tab }}"></i>
+                    <br>
+                    <small>{{ container_image_tab }}</small>
+                </label>
+                {% endfor %}
+            </div>
+            <div class="row">
+                {% include 'container_image/tab/' + tab + '.html' %}
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,55 @@
+{% for tag in (container_image['tags'].values()|sort(attribute='created_at'))|reverse %}
+    <div class="row mb-2">
+        <div class="col">
+            <div class="row">
+                <div class="col">
+                    <div class="float-start">
+                        <h5>{{ tag['name'] | highlight(filter_string) | safe }}</h5>
+                    </div>
+                    <div class="float-end align-middle">
+            <span title="date of creation">
+                <i class="bi bi-cloud-arrow-up-fill"></i> {{ tag['created_at_human_readable'] }}
+            </span>
+                        <span class="ms-2"
+                              title="compressed image size">
+                <i class="bi bi-database-fill"></i> {{ tag['total_size_human_readable'] }}
+            </span>
+                        {% if tag['tag_revision_background_color'] %}
+                            <span class="ms-2"
+                                  title="identical revision hash">
+                            <i class="bi bi-circle-fill"
+                                style="color:#{{ tag['tag_revision_background_color'] }};">
+                            </i>
+                            </span>
+                        {% endif %}
+                        {% set random_id = range(1, 999999) | random %}
+                        <span class="clipboard-copy" title="click to copy full hash {{ tag['revision'] }}"
+                              data-copy-text="{{ tag['revision'] }}"
+                              onclick="copyTextToClipboard(this, 'hash_{{ random_id }}')"
+                        >
+                #{{ tag['short_revision'] }}
+                <i class="bi bi-clipboard text-primary" id="clipboard_hash_{{ random_id }}"></i>
+            </span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="row">
+                        <div class="col mt-2 mb-2">
+                            {% set image_tag = container_image['location'] + ':' + tag['name'] %}
+                            {% include 'container_image/tag_clipboard.html' %}
+                        </div>
+                    </div>
+                    {% if loop.index != loop.length %}
+                        <div class="row">
+                            <div class="col">
+                                <hr>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}

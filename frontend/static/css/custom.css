@@ -1,0 +1,63 @@
+/* avoid BS5 always underlined links  */
+a {
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* always show scrollbar to avoid flickering search results */
+body {
+    overflow-y: scroll;
+}
+
+.container-image-card {
+    cursor: pointer;
+}
+
+.container-image-tab {
+    cursor: pointer;
+}
+
+.clipboard-copy {
+    cursor: pointer;
+}
+
+.container_image_url {
+    font-family: "Lucida Console", "Courier New", monospace;
+    color: whitesmoke;
+    background: dimgray;
+}
+
+/* somewhat highlight for image URLs */
+.container_image_url:hover {
+    color: white;
+    background: gray;
+}
+
+/* highlit area for matching search string */
+.highlight {
+    background: lightgreen;
+}
+
+.search-result-sort {
+    cursor: pointer;
+}
+
+/* tags symbol */
+.bi-custom-tags::before {
+    content: "\f5b1";
+}
+
+/* file symbol for readmes */
+.bi-custom-readme::before {
+    content: "\f38a";
+}
+
+#back_to_top {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    z-index: 99;
+}

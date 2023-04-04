@@ -1,0 +1,52 @@
+<div class="row p-0 m-0">
+    {% if search_results_count > 0 %}
+    <div class="col-4 d-flex">
+        <div class="my-2">
+            {% if search_results_count > 1 %}
+            {% set word_images = 'images' %}
+            {% else %}
+            {% set word_images = 'image' %}
+            {% endif %}
+            <b>{{ search_results_count }}</b> container {{ word_images }}
+        </div>
+    </div>
+    <div class="col-8 d-flex justify-content-end">
+        <div class="btn-group bg-white text-white me-2" role="group">
+            {% for sort_by in SORTABLE_BY %}
+            <input type="radio" class="btn-check" name="sort_by" id="sort_by_{{ sort_by }}"
+                   autocomplete="off"
+                   {% if sort_by== session['sort_by'] %}
+            checked
+            {% endif %}
+            >
+            <label class="btn btn-outline-primary"
+                   for="sort_by_{{ sort_by }}"
+                   hx-target="#search_results"
+                   hx-get="/search/{{ search_string }}"
+                   hx-vals='{"sort_by": "{{ sort_by }}",
+                                 "mode": "sort"}'>
+                {{ sort_by }}
+            </label>
+            {% endfor %}
+        </div>
+        <div class="btn-group bg-white text-white" role="group">
+            {% for sort_order in SORT_ORDERS %}
+            <input type="radio" class="btn-check" name="sort_order" id="sort_order_{{ sort_order }}"
+                   autocomplete="off"
+                   {% if sort_order== session['sort_order'] %}
+            checked
+            {% endif %}
+            >
+            <label class="btn btn-outline-primary"
+                   for="sort_order_{{ sort_order }}"
+                   hx-target="#search_results"
+                   hx-get="/search/{{ search_string }}"
+                   hx-vals='{"sort_order": "{{ sort_order }}",
+                                 "mode": "sort"}'>
+                <i class="bi bi-sort-{{ sort_order }}"></i>
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>

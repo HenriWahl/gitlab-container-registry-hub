@@ -1,0 +1,75 @@
+{% if not is_htmx %}
+{% extends 'base.html' %}
+{% endif %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col">
+        <div class="btn btn-primary"
+             hx-get="/search/{{ search_string }}"
+             hx-target="#content"
+             hx-push-url="true">
+            <i class="bi bi-arrow-left"></i>
+            back
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col">
+        <div class="card bg-white">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col">
+                        <div class="row">
+                            <div class="col">
+                                <h2>{{ container_image['path'] }}</h2>
+                            </div>
+                        </div>
+                        <div class="row my-3">
+                            <div class="col text-secondary">
+                                {{ container_image['project']['description'] }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-3">
+                        {% include 'container_image/meta.html' %}
+                    </div>
+                    <div class="col-9">
+                        <div class="row">
+                            <div class="col mb-2">
+                                {% include 'container_image/tag_freshest.html' %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                {% set image_tag = container_image['location'] + ':' +
+                                container_image['last_update_tag'] %}
+                                {% include 'container_image/tag_clipboard.html' %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mt-4">
+    <div class="col">
+        <div class="card bg-white">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col">
+                        {% include 'container_image/tabs.html' %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

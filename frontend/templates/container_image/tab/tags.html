@@ -1,0 +1,28 @@
+<div class="col">
+    <div class="row mb-1">
+        <div class="col-3 mb-1">
+            <div class="input-group">
+                <input class="form-control" type="search"
+                       hx-post="/container_image/{{ container_image.id }}/tab/tags/filter"
+                       hx-target="#filtered_tags"
+                       hx-trigger="keyup changed delay:10ms, search"
+                       class="form-control mx-auto"
+                       type="text"
+                       name="filter"
+                       id="filter"
+                       placeholder="Filter tags..."
+                >
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <hr>
+        </div>
+    </div>
+    <div class="row" id="filtered_tags">
+        <div class="col">
+            {% include 'container_image/tab/tags_list.html' %}
+        </div>
+    </div>
+</div>

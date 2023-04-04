@@ -1,0 +1,16 @@
+<!-- random id for clipboard icon change-->
+{% set random_id = range(1, 999999) | random %}
+<ul class="list-group list-group-horizontal" title="click to copy full container image URL">
+    <li class="list-group-item container_image_url clipboard-copy"
+        data-copy-text="{{ image_tag }}"
+        onclick="copyTextToClipboard(this, {{ random_id }})"
+    >
+        <small>{{ image_tag }}</small>
+    </li>
+    <li class="list-group-item clipboard-copy bg-light text-primary"
+        data-copy-text="{{ image_tag }}"
+        onclick="copyTextToClipboard(this, {{ random_id }})"
+    >
+        <i class="bi bi-clipboard" id="clipboard_{{ random_id }}"></i>
+    </li>
+</ul>

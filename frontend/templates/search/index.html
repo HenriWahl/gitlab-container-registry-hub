@@ -1,0 +1,14 @@
+{% if not is_htmx %}
+{% extends 'base.html' %}
+{% endif %}
+
+{% block content %}
+
+<div class="row" id="search_info">
+    {% include '/search/info.html' %}
+</div>
+<div class="row" id="search_results">
+    {% include '/search/results.html' %}
+</div>
+
+{% endblock %}
