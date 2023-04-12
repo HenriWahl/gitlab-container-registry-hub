@@ -214,10 +214,11 @@ class CollectorThread(Thread):
         NOW = datetime.now(timezone.utc)
 
         for container_image_id in container_images.keys():
-            container_images[container_image_id]['last_update'] = None
-            container_images[container_image_id]['last_update_tag'] = None
+            # empty default values may better be '' than None to avoid concat crashes
+            container_images[container_image_id]['last_update'] = ''
+            container_images[container_image_id]['last_update_tag'] = ''
             # 'tag' will be identical to 'last_update_tag' and stored for sortability in the UI
-            container_images[container_image_id]['tag'] = None
+            container_images[container_image_id]['tag'] = ''
             # get last update date
             for tag in container_images[container_image_id]['tags'].values():
                 # parse time string from Gitlab into datetime object
