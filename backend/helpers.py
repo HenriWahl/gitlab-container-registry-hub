@@ -1,3 +1,5 @@
+from os import _exit
+
 def plural_or_not(count: int, word: str) -> str:
     """
     decide if a word has to be in plural because its appears as multiple
@@ -9,3 +11,14 @@ def plural_or_not(count: int, word: str) -> str:
         return f'{count} {word}s'
     else:
         return f'{count} {word}'
+
+
+def exit(message='', code=1):
+    """
+    exit with message and code
+    :param message:
+    :param code:
+    :return:
+    """
+    print(message)
+    _exit(code)
