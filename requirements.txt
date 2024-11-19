@@ -1,7 +1,7 @@
 datasize
 flask
+httpx
 markdown
 munch
 pyaml
 python-dateutil
-requests

@@ -3,6 +3,7 @@ from dataclasses import dataclass, \
 from datetime import datetime, \
     timezone
 from json import loads
+from json.decoder import JSONDecodeError
 from threading import Thread
 from time import sleep
 
@@ -13,15 +14,18 @@ from markdown import markdown
 
 from backend.config import config
 from backend.connection import gitlab_session
-from backend.helpers import plural_or_not
+from backend.helpers import plural_or_not, \
+    exit
 
 # for now all requested URLs start with this suffix
 API_SUFFIX = '/api/v4'
+
 
 class ContainerImageCache(dict):
     """
     dict-based class to act as cache
     """
+
     def __init__(self):
         super().__init__()
         # actual container repositories cache
@@ -44,7 +48,6 @@ class ContainerImageCache(dict):
         self.container_images.update(container_images)
         self.create_index_by_name()
 
-
     def create_index_by_name(self):
         """
         allow to access container repositories by their name to make them searchable
@@ -58,6 +61,7 @@ class CollectorThread(Thread):
     """
     collects info from Gitlab at certain interval
     """
+
     def __init__(self):
         Thread.__init__(self, name='Collector')
 
@@ -65,7 +69,10 @@ class CollectorThread(Thread):
         global container_images_cache
         global update_status
         while True:
-            container_images_cache.update_cache(self.collect_container_images())
+            try:
+                container_images_cache.update_cache(self.collect_container_images())
+            except JSONDecodeError as exception:
+                print(f'Exception in collector thread: {exception}')
             sleep(config.update_interval)
 
     def collect_container_images(self):
@@ -76,7 +83,7 @@ class CollectorThread(Thread):
         # to speedup development and avoid waiting for Gitlab response dump the latter
         if config.load_data:
             import pickle
-            with open('container_images_dump.pickle','rb') as pickle_file:
+            with open('container_images_dump.pickle', 'rb') as pickle_file:
                 container_images = pickle.load(pickle_file)
         else:
             # dict for storage of container image info
@@ -120,7 +127,7 @@ class CollectorThread(Thread):
         # to speedup development and avoid waiting for Gitlab response dump the latter
         if config.dump_data:
             import pickle
-            with open('container_images_dump.pickle','wb') as pickle_file:
+            with open('container_images_dump.pickle', 'wb') as pickle_file:
                 pickle.dump(container_images, pickle_file)
 
         # make update progress bar unnecessary
@@ -148,6 +155,13 @@ class CollectorThread(Thread):
                 projects_total_pages = int(response.headers.get('x-total-pages'))
                 projects_page += 1
                 projects_list += loads(response.text)
+            elif response.status_code == 401:
+                # when token is unauthorized exit immediately
+                exit(f'status_code: {response.status_code} text: {response.text}')
+            else:
+                print(f'status_code: {response.status_code} text: {response.text}')
+                # try agin after a short nap
+                sleep(20)
 
         for project in projects_list:
             # fix None project description
@@ -236,7 +250,8 @@ class CollectorThread(Thread):
                 # add human readable tag image size
                 tag['total_size_human_readable'] = '{:.2MiB}'.format(DataSize(tag['total_size']))
                 # add human readable tag creation date
-                tag['created_at_human_readable'] =  dateutil_parser.parse(tag['created_at']).strftime('%Y-%m-%d %H:%M:%S')
+                tag['created_at_human_readable'] = dateutil_parser.parse(tag['created_at']).strftime(
+                    '%Y-%m-%d %H:%M:%S')
 
             # get age of a container image
             # relativedelta adds all other units like 'years=0' which makes it better comparable
