@@ -6,6 +6,10 @@ from yaml import safe_load
 from yaml.scanner import ScannerError
 
 
+# for now all requested URLs start with this suffix
+API_SUFFIX = '/api/v4'
+TIMEOUT = 60
+
 def load_config(args):
     """
     load YAML config file

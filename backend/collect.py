@@ -12,13 +12,11 @@ from dateutil import parser as dateutil_parser, \
     relativedelta
 from markdown import markdown
 
-from backend.config import config
+from backend.config import API_SUFFIX, \
+                           config
 from backend.connection import gitlab_session_get
 from backend.helpers import plural_or_not, \
     exit
-
-# for now all requested URLs start with this suffix
-API_SUFFIX = '/api/v4'
 
 
 class ContainerImageCache(dict):
