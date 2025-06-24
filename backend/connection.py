@@ -1,10 +1,6 @@
-from httpx import Client
+from httpx import Client, Response
 
 from backend.config import config
-
-# gitlab_session to be used to connect to GitLab
-gitlab_session = Client(follow_redirects=True)
-gitlab_session.headers.update({'PRIVATE-TOKEN': config.api.token})
 
 # disable TLS verification if configured
 if config.api.get('verify', True) == False:
@@ -13,3 +9,17 @@ else:
     gitlab_session = Client(follow_redirects=True)
 
 gitlab_session.headers.update({'PRIVATE-TOKEN': config.api.token})
+
+
+def gitlab_session_get(url, params=None) -> Response:
+    """
+    GET request to GitLab API with session - important with exception handling
+    :param url: URL to request
+    :param params: optional parameters for the request
+    :return: response object
+    """
+    try:
+        return gitlab_session.get(url, params=params)
+    except Exception as exception:
+        # if an exception occurs, return a response with status code 999 to indicate an unknown error
+        return Response(999, text=str(exception))

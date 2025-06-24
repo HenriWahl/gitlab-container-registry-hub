@@ -13,7 +13,7 @@ from dateutil import parser as dateutil_parser, \
 from markdown import markdown
 
 from backend.config import config
-from backend.connection import gitlab_session
+from backend.connection import gitlab_session_get
 from backend.helpers import plural_or_not, \
     exit
 
@@ -147,7 +147,7 @@ class CollectorThread(Thread):
         projects_total_pages = 1
 
         while projects_page <= projects_total_pages:
-            response = gitlab_session.get(f'{config.api.url}{API_SUFFIX}/projects',
+            response = gitlab_session_get(f'{config.api.url}{API_SUFFIX}/projects',
                                           params={'page': projects_page,
                                                   'per_page': 100})
             if response.status_code < 400:
@@ -180,7 +180,7 @@ class CollectorThread(Thread):
         """
         for project in [x for x in projects_list if x.get('container_registry_enabled')]:
             project_id = project.get('id')
-            response = gitlab_session.get(f'{config.api.url}{API_SUFFIX}/projects/{project_id}/registry/repositories',
+            response = gitlab_session_get(f'{config.api.url}{API_SUFFIX}/projects/{project_id}/registry/repositories',
                                           params={'tags': True,
                                                   'tags_count': True,
                                                   'size': True})
@@ -207,7 +207,7 @@ class CollectorThread(Thread):
             tags = dict()
             for tag in container_images[container_image_id]['tags']:
                 tag_name = tag.get('name')
-                response = gitlab_session.get(
+                response = gitlab_session_get(
                     f'{config.api.url}{API_SUFFIX}/projects/{project_id}/registry/repositories/{container_image_id}/tags/{tag_name}',
                     params={'tags': True,
                             'tags_count': True,
@@ -313,7 +313,7 @@ class CollectorThread(Thread):
             project_id = project['id']
             if project.get('readme_url'):
                 readme_file = project['readme_url'].split('/')[-1]
-                response = gitlab_session.get(
+                response = gitlab_session_get(
                     f'{config.api.url}{API_SUFFIX}/projects/{project_id}/repository/files/{readme_file}/raw',
                     params={'id': project_id,
                             'file_path': readme_file,
