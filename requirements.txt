@@ -1,4 +1,6 @@
+couchdb3
 datasize
+deepdiff
 flask
 httpx
 markdown

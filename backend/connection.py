@@ -1,9 +1,7 @@
 from httpx import Client, Response
 
 from backend.config import config, \
-                           TIMEOUT
-
-
+    TIMEOUT
 
 # disable TLS verification if configured
 if config.api.get('verify', True) == False:

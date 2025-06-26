@@ -15,6 +15,7 @@ from markdown import markdown
 from backend.config import API_SUFFIX, \
                            config
 from backend.connection import gitlab_session_get
+from backend.database import couchdb
 from backend.helpers import plural_or_not, \
     exit
 
@@ -130,6 +131,11 @@ class CollectorThread(Thread):
 
         # make update progress bar unnecessary
         update_status.initialized = True
+
+        db = couchdb.get_database('container_images')
+        for container_image in container_images.values():
+            db.store(container_image['location'], container_image)
+
 
         return container_images
 
@@ -274,6 +280,9 @@ class CollectorThread(Thread):
                 age_human_readable = f'{plural_or_not(age.seconds, "second")}'
             age_human_readable = f'{age_human_readable}'
             container_images[container_image_id]['age_human_readable'] = age_human_readable
+
+            # cleanup some datetime objects to string for JSON serialization
+
         return container_images
 
     @staticmethod
