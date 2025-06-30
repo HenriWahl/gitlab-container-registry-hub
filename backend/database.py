@@ -24,8 +24,13 @@ class CouchDBDatabase:
         :param database_name: Name of the database
         """
         self._name = name
-        self._database = server.get(name)
-
+        self._database = server.get_database_from_server(name)
+        self._database.save_index(index={'fields': ['name']},
+                                  ddoc='name',
+                                  name='name')
+        self._database.save_index(index={'fields': ['id']},
+                                  ddoc='id',
+                                  name='id')
     def store(self, document_id: str, document_content: dict) -> Document:
         # quoting is necessary to avoid IDs being cut of at '/'s
         document_id_quoted = quote(document_id, safe='')
@@ -65,6 +70,12 @@ class CouchDBDatabase:
 
         return self._database.get(document_id)
 
+    def find(self, selector=dict(), use_index=None):
+        indices = self._database.indexes()
+        blubb = self._database.find(selector=selector,
+                                    use_index=use_index)
+        dname = self._database.get_design('name')
+        pass
 
 class CouchDBServer:
 
@@ -101,26 +112,26 @@ class CouchDBServer:
         """
         return self._server.all_dbs()
 
-    def get(self, database_name):
+    def get_database_from_server(self, database_name):
         """
-        Get a specific database by name.
+        Get access to a database on server
         :param database_name: Name of the database to retrieve
         :return: Database instance
         """
-        if not (database_name in self._server.all_dbs()):
+        if database_name not in self._server.all_dbs():
             self._server.create(database_name)
         return self._server.get(database_name)
 
-    def get_database(self, database_name):
+    def get_database_object(self, database_name):
         """
-        Get a specific database by name.
+        Get a specific database object, instance of CouchDBDatabase
         :param database_name: Name of the database to retrieve
         :return: Database instance
         """
         if database_name not in self._server.all_dbs():
             self._server.create(database_name)
         return CouchDBDatabase(self, database_name)
-
+        #return self._server.get(database_name)
 
 # connect to CouchDB server
 couchdb = CouchDBServer(config)

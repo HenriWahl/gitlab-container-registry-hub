@@ -1,4 +1,4 @@
-couchdb3
+couchdb3>=2.0.1
 datasize
 deepdiff
 flask

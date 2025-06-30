@@ -132,9 +132,13 @@ class CollectorThread(Thread):
         # make update progress bar unnecessary
         update_status.initialized = True
 
-        db = couchdb.get_database('container_images')
+        db = couchdb.get_database_object('container_images')
         for container_image in container_images.values():
             db.store(container_image['location'], container_image)
+
+        bla = db.find({'diz/infrastructure/atlassian-prod/jira': ''}, 'name')
+
+        pass
 
 
         return container_images
