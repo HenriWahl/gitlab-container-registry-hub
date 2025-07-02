@@ -8,9 +8,9 @@ from flask import Blueprint, \
     request, \
     session
 
-from backend.collect import container_images_cache, \
-    update_status
+from backend.collect import update_status
 from backend.config import config
+from backend.database import couchdb
 
 from frontend.misc import is_htmx
 
@@ -20,6 +20,8 @@ RESULTS_PER_PAGE = 10
 
 # take name for blueprint from file for flawless copy&paste
 blueprint = Blueprint(Path(__file__).stem, __name__)
+
+db = couchdb.get_database_object('container_images')
 
 
 def process_search_request(request=None, session=None, search_string: str = ''):
@@ -66,13 +68,21 @@ def process_search_request(request=None, session=None, search_string: str = ''):
         # to be refined
         search_string = request.form['search'].strip().lower()
     # add matching container_images to search results
-    for name, container_image in container_images_cache.index_by_name.items():
-        if search_string.lower() in name.lower():
-            search_results.update({name: container_image})
-    # sort by sort_order
-    search_results_sorted = dict(sorted(search_results.items(),
-                                        key=lambda x: x[1][sort_by],
-                                        reverse=SORT_ORDERS.get(sort_order)))
+
+    # for name, container_image in container_images_cache.index_by_name.items():
+    #     if search_string.lower() in name.lower():
+    #         search_results.update({name: container_image})
+
+    search_results_db = db.find(selector={'name': {'$regex': f'.*{search_string.lower()}.*'}}, use_index='name')
+
+    if isinstance(search_results_db, list):
+        # sort by sort_order
+        search_results_sorted = dict(sorted( { x.get('name'): x for x in search_results_db }.items(),
+                                            key=lambda x: x[1][sort_by],
+                                            reverse=SORT_ORDERS.get(sort_order)))
+    else:
+        search_results_sorted = dict()
+
     # take only sorted values as list
     search_results_list = list(search_results_sorted.values())
     # count number of results

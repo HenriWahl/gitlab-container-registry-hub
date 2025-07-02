@@ -8,9 +8,11 @@ from flask import Blueprint, \
     request, \
     render_template
 
-from backend.collect import container_images_cache
+from backend.database import couchdb
 from frontend.misc import is_htmx
 
+
+db = couchdb.get_database_object('container_images')
 
 # tabs for container repository details
 container_image_TABS = ['tags', 'readme']
@@ -32,8 +34,11 @@ def container_image(container_image_id: int = None, tab=None):
     search_string = ''
     filter_string = ''
 
+    search_result_db = db.find(selector={'id': container_image_id}, use_index='id')
+
+    pass
     # only process if there was a valid container involved
-    if container_images_cache.container_images.get(container_image_id):
+    if search_result_db and len(search_result_db) == 1:
         # tab to be shown
         tab_selected = tab
         # if there is none the first one will be chosen
@@ -49,8 +54,8 @@ def container_image(container_image_id: int = None, tab=None):
             # filtering attempts will receive a filtered list
             else:
                 template = 'container_image/tab/tags_list.html'
-        # get single requested repository
-        container_image = container_images_cache.container_images[container_image_id]
+        # get single requested repository - can only be one
+        container_image = search_result_db[0]
         # search_string is for back-button
         if request.args.get('search_string'):
             search_string = request.args['search_string']

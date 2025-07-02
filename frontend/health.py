@@ -2,9 +2,7 @@ from pathlib import Path
 
 from flask import Blueprint, \
     redirect, \
-    request, \
-    render_template, \
-    render_template_string
+    render_template
 
 from backend.collect import update_status
 

@@ -25,12 +25,13 @@ class CouchDBDatabase:
         """
         self._name = name
         self._database = server.get_database_from_server(name)
-        self._database.save_index(index={'fields': ['name']},
-                                  ddoc='name',
-                                  name='name')
-        self._database.save_index(index={'fields': ['id']},
+        index_name = self._database.save_index(index={'fields': ['name']},
+                                  ddoc='name')
+        index_id = self._database.save_index(index={'fields': ['id']},
                                   ddoc='id',
                                   name='id')
+        pass
+
     def store(self, document_id: str, document_content: dict) -> Document:
         # quoting is necessary to avoid IDs being cut of at '/'s
         document_id_quoted = quote(document_id, safe='')
@@ -71,11 +72,13 @@ class CouchDBDatabase:
         return self._database.get(document_id)
 
     def find(self, selector=dict(), use_index=None):
-        indices = self._database.indexes()
-        blubb = self._database.find(selector=selector,
-                                    use_index=use_index)
-        dname = self._database.get_design('name')
-        pass
+        result = self._database.find(selector=selector,
+                                    use_index=use_index,
+                                    limit=99999999)
+        if 'warning' in result:
+            print(result['warning'])
+        return result.get('docs', list())
+
 
 class CouchDBServer:
 
@@ -96,7 +99,6 @@ class CouchDBServer:
                     password=config.couchdb.password,
                     timeout=TIMEOUT
                 )
-                print(dir(self._server))
             except Exception as exception:
                 print(f"Error connecting to CouchDB: {exception}")
                 sleep(10)
@@ -135,6 +137,3 @@ class CouchDBServer:
 
 # connect to CouchDB server
 couchdb = CouchDBServer(config)
-print(dir(couchdb))
-
-pass
