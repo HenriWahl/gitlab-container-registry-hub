@@ -120,7 +120,6 @@ def collect_project_container_image_tags_humanize(container_image: dict) -> dict
     # get last update date
     for tag in container_image['tags'].values():
         # parse time string from Gitlab into datetime object
-        print(container_image.get('location'), tag.get('created_at'), tag)
         if tag.get('created_at'):
             tag_created_at = dateutil_parser.parse(tag.get('created_at'))
             # when currently checked tag is newer than latest known it become the new last_update

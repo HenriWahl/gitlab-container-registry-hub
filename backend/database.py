@@ -50,25 +50,12 @@ class CouchDBDatabase:
         if document:
             document_as_dict = dict(document)
             diff = DeepDiff(document_as_dict, document_content, ignore_order=True)
-            # something is strange with 'status', needs to be checked
-            # same with 'cleanup_policy_started_at'
-
-            bla = set(diff.affected_root_keys)
-            print(dir(diff.affected_root_keys))
-
             if diff.get('values_changed') or \
                 diff.get('affected_root_keys') and \
                 set(diff.affected_root_keys) != {'_id', '_rev'}:
-                #diff.affected_root_keys != set(['status', '_id', '_rev']):
-                # diff.affected_root_keys != set(['status', '_id', '_rev']) and \
-                # diff.affected_root_keys != set(['cleanup_policy_started_at', 'status', '_id', '_rev']):
-                #document_content_json = dumps(document_content)
-                #document.update({**{'_id': document_id_quoted}, **document_content_json})
                 document.update({**{'_id': document_id_quoted}, **document_content})
                 self._database.save(document)
         else:
-            #document_content_json = dumps(document_content)
-            #self._database.save({**{'_id': document_id_quoted}, **document_content_json})
             self._database.save({**{'_id': document_id_quoted}, **document_content})
 
         return self._database.get(document_id)
