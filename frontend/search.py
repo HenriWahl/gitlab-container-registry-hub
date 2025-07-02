@@ -8,7 +8,6 @@ from flask import Blueprint, \
     request, \
     session
 
-from backend.collect import update_status
 from backend.config import config
 from backend.database import couchdb
 
@@ -159,8 +158,7 @@ def search(search_string: str = '', part1: str = '', part2: str = '', part3: str
                                              search_results_count=search_results_count,
                                              session=session,
                                              SORTABLE_BY=SORTABLE_BY,
-                                             SORT_ORDERS=SORT_ORDERS,
-                                             update_status=update_status))
+                                             SORT_ORDERS=SORT_ORDERS))
     # htmx header allows to modify browser history
     response.headers['HX-Push-Url'] = f'/search/{search_string}'
     return response

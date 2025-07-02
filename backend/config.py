@@ -36,8 +36,8 @@ def load_config(args):
 # allow to add config options via commandline e.g. for testing
 parser = ArgumentParser()
 parser.add_argument('-c', '--config-file', type=str, required=True)
-parser.add_argument('--dump-data', action='store_true', default=False, required=False)
-parser.add_argument('--load-data', action='store_true', default=False, required=False)
+# parser.add_argument('--dump-data', action='store_true', default=False, required=False)
+# parser.add_argument('--load-data', action='store_true', default=False, required=False)
 parser.add_argument('-m', '--mode', type=str, choices=['collect', 'web'], required=True)
 parser.add_argument('--update-interval', type=int, default=1800, required=False)
 

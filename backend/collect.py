@@ -54,32 +54,7 @@ def collect_projects() -> list:
     return projects_list
 
 
-def collect_project_container_images(container_images: dict, projects_list: list) -> dict:
-    """
-    enrich container_images with details of projects
-    :param container_images:
-    :param projects_list:
-    :return:
-    """
-    for project in [x for x in projects_list if x.get('container_registry_enabled')]:
-        project_id = project.get('id')
-        response = gitlab_session_get(f'{config.api.url}{API_SUFFIX}/projects/{project_id}/registry/repositories',
-                                      params={'tags': True,
-                                              'tags_count': True,
-                                              'size': True})
-        repository = loads(response.text)
-        if repository:
-            # collect all images of a project
-            for container_image in repository:
-                container_image_id = container_image.get('id')
-                container_images[container_image_id] = container_image
-                container_images[container_image_id]['project'] = project
-                # fix name which basically is the same as path
-                container_images[container_image_id]['name'] = container_image['path']
-    return container_images
-
-
-def collect_project_container_images2(project) -> dict:
+def collect_project_container_images(project) -> dict:
     """
     enrich container_images with details of projects
     :param container_images:
@@ -87,228 +62,201 @@ def collect_project_container_images2(project) -> dict:
     :return:
     """
 
-    container_images = dict()
+    result = list()
 
     project_id = project.get('id')
     response = gitlab_session_get(f'{config.api.url}{API_SUFFIX}/projects/{project_id}/registry/repositories',
                                   params={'tags': True,
                                           'tags_count': True,
                                           'size': True})
-    repository = loads(response.text)
-    if repository:
+    repositories = loads(response.text)
+
+    if repositories:
         # collect all images of a project
-        for container_image in repository:
-            container_image_id = container_image.get('id')
-            container_images[container_image_id] = container_image
-            container_images[container_image_id]['project'] = project
+        for container_image in repositories:
+            container_image['project'] = project
             # fix name which basically is the same as path
-            container_images[container_image_id]['name'] = container_image['path']
-    return container_images
+            container_image['name'] = container_image['location']
+            result.append(container_image)
+    return result
 
 
-
-def collect_project_container_images_tags(container_images: dict) -> dict:
+def collect_project_container_images_tag(container_image: dict) -> dict:
     """
     get all tags of a container repository of a project
-    :param container_images:
+    :param container_image:
     :return:
     """
-    for container_image_id in container_images.keys():
-        project_id = container_images[container_image_id]['project_id']
-        tags = dict()
-        for tag in container_images[container_image_id]['tags']:
-            tag_name = tag.get('name')
-            response = gitlab_session_get(
-                f'{config.api.url}{API_SUFFIX}/projects/{project_id}/registry/repositories/{container_image_id}/tags/{tag_name}',
-                params={'tags': True,
-                        'tags_count': True,
-                        'size': True})
-            tags[tag_name] = loads(response.text)
-        # overwrite tags with more detailed info
-        container_images[container_image_id]['tags'] = tags
-    return container_images
+    container_image_id = container_image['id']
+    project_id = container_image['project_id']
+    tags = dict()
+    for tag in container_image['tags']:
+        tag_name = tag.get('name')
+        response = gitlab_session_get(
+            f'{config.api.url}{API_SUFFIX}/projects/{project_id}/registry/repositories/{container_image_id}/tags/{tag_name}',
+            params={'tags': True,
+                    'tags_count': True,
+                    'size': True})
+        tags[tag_name] = loads(response.text)
+    # overwrite tags with more detailed info
+    container_image['tags'] = tags
+    return container_image
 
 
-def collect_project_container_images_tags_humanize(container_images: dict) -> dict:
+def collect_project_container_image_tags_humanize(container_image: dict) -> dict:
     """
     get all tags of a container repository of a project
-    :param container_images:
+    :param container_image:
     :return:
     """
     # 'now' is needed for age calculation of images
     NOW = datetime.now(timezone.utc)
 
-    for container_image_id in container_images.keys():
-        # empty default values may better be '' than None to avoid concat crashes
-        container_images[container_image_id]['last_update'] = ''
-        container_images[container_image_id]['last_update_tag'] = ''
-        # 'tag' will be identical to 'last_update_tag' and stored for sortability in the UI
-        container_images[container_image_id]['tag'] = ''
-        # get last update date
-        for tag in container_images[container_image_id]['tags'].values():
-            # parse time string from Gitlab into datetime object
+    # empty default values may better be '' than None to avoid concat crashes
+    container_image['last_update'] = ''
+    container_image['last_update_tag'] = ''
+    # 'tag' will be identical to 'last_update_tag' and stored for sortability in the UI
+    container_image['tag'] = ''
+    # get last update date
+    for tag in container_image['tags'].values():
+        # parse time string from Gitlab into datetime object
+        print(container_image.get('location'), tag.get('created_at'), tag)
+        if tag.get('created_at'):
             tag_created_at = dateutil_parser.parse(tag.get('created_at'))
             # when currently checked tag is newer than latest known it become the new last_update
-            if container_images[container_image_id]['last_update']:
-                if container_images[container_image_id]['last_update'] < tag_created_at:
-                    container_images[container_image_id]['last_update'] = tag_created_at
-                    container_images[container_image_id]['last_update_tag'] = tag['name']
-                    container_images[container_image_id]['tag'] = tag['name']
+            if container_image['last_update']:
+                if container_image['last_update'] < tag_created_at:
+                    container_image['last_update'] = tag_created_at
+                    container_image['last_update_tag'] = tag['name']
+                    container_image['tag'] = tag['name']
             else:
-                container_images[container_image_id]['last_update'] = tag_created_at
-                container_images[container_image_id]['last_update_tag'] = tag['name']
-                container_images[container_image_id]['tag'] = tag['name']
+                container_image['last_update'] = tag_created_at
+                container_image['last_update_tag'] = tag['name']
+                container_image['tag'] = tag['name']
             # add human-readable tag image size
             tag['total_size_human_readable'] = '{:.2MiB}'.format(DataSize(tag['total_size']))
             # add human-readable tag creation date
             tag['created_at_human_readable'] = dateutil_parser.parse(tag['created_at']).strftime(
                 '%Y-%m-%d %H:%M:%S')
 
-        # get age of a container image
-        # relativedelta adds all other units like 'years=0' which makes it better comparable
-        age = relativedelta.relativedelta(NOW, container_images[container_image_id]['last_update'])
-        container_images[container_image_id]['age'] = age
-        # store creation date as diffenrence between now and age
-        container_images[container_image_id]['created'] = NOW - age
-        # get a human-readable version of age to be read by humans
-        container_images[container_image_id]['age_human_readable'] = ''
-        age_human_readable = 'n/a'
-        if age.years > 0:
-            age_human_readable = f'{plural_or_not(age.years, "year")}'
-        elif age.months > 0:
-            age_human_readable = f'{plural_or_not(age.months, "month")}'
-        elif age.weeks > 0:
-            age_human_readable = f'{plural_or_not(age.weeks, "week")}'
-        elif age.days > 0:
-            age_human_readable = f'{plural_or_not(age.days, "day")}'
-        elif age.hours > 0:
-            age_human_readable = f'{plural_or_not(age.hours, "hour")}'
-        elif age.seconds > 0:
-            age_human_readable = f'{plural_or_not(age.seconds, "second")}'
-        age_human_readable = f'{age_human_readable}'
-        container_images[container_image_id]['age_human_readable'] = age_human_readable
+    # get age of a container image
+    # relativedelta adds all other units like 'years=0' which makes it better comparable
+    age = relativedelta.relativedelta(NOW, container_image['last_update'])
+    #container_images['age'] = age
+    # store creation date as difference between now and age
+    container_image['created'] = NOW - age
+    # get a human-readable version of age to be read by humans
+    container_image['age_human_readable'] = ''
+    age_human_readable = 'n/a'
+    if age.years > 0:
+        age_human_readable = f'{plural_or_not(age.years, "year")}'
+    elif age.months > 0:
+        age_human_readable = f'{plural_or_not(age.months, "month")}'
+    elif age.weeks > 0:
+        age_human_readable = f'{plural_or_not(age.weeks, "week")}'
+    elif age.days > 0:
+        age_human_readable = f'{plural_or_not(age.days, "day")}'
+    elif age.hours > 0:
+        age_human_readable = f'{plural_or_not(age.hours, "hour")}'
+    elif age.seconds > 0:
+        age_human_readable = f'{plural_or_not(age.seconds, "second")}'
+    age_human_readable = f'{age_human_readable}'
+    container_image['age_human_readable'] = age_human_readable
 
-        # cleanup some datetime objects to string for JSON serialization
-
-    return container_images
+    return container_image
 
 
-def collect_project_container_images_tags_compare_revisions(container_images: dict) -> dict:
+def collect_project_container_image_tags_compare_revisions(container_image: dict) -> dict:
     """
     get revision hashes for tags which share a revision to make it clear they belong together
     """
-    for container_image_id in container_images.keys():
-        # store all revisions
-        revisions = dict()
-        # consider every tag
-        for tag, properties in container_images[container_image_id]['tags'].items():
-            revision = properties.get('revision')
-            # default is no background color
-            properties['tag_revision_background_color'] = ''
-            if revision:
-                revisions.setdefault(revision, list())
-                revisions[revision].append(tag)
-        # change only background color for those which have more than 1 which have the same revision
-        for revision in [x for x in revisions.keys() if len(revisions[x]) > 1]:
-            for tag, properties in container_images[container_image_id]['tags'].items():
-                if tag in revisions[revision]:
-                    properties['tag_revision_background_color'] = revision[0:6]
-    return container_images
+    # store all revisions
+    revisions = dict()
+    # consider every tag
+    for tag, properties in container_image['tags'].items():
+        revision = properties.get('revision')
+        # default is no background color
+        properties['tag_revision_background_color'] = ''
+        if revision:
+            revisions.setdefault(revision, list())
+            revisions[revision].append(tag)
+    # change only background color for those which have more than 1 which have the same revision
+    for revision in [x for x in revisions.keys() if len(revisions[x]) > 1]:
+        for tag, properties in container_image['tags'].items():
+            if tag in revisions[revision]:
+                properties['tag_revision_background_color'] = revision[0:6]
+    return container_image
 
 
-def collect_project_container_images_readme(container_images: dict) -> dict:
+def collect_project_container_image_readme(container_image: dict) -> dict:
     """
     get readme of a project and add to container images
-    :param container_images:
+    :param container_image:
     :return:
     """
-    for container_image_id in container_images.keys():
-        project = container_images[container_image_id]['project']
-        project_id = project['id']
-        if project.get('readme_url'):
-            readme_file = project['readme_url'].split('/')[-1]
-            response = gitlab_session_get(
-                f'{config.api.url}{API_SUFFIX}/projects/{project_id}/repository/files/{readme_file}/raw',
-                params={'id': project_id,
-                        'file_path': readme_file,
-                        'ref': 'HEAD'})
+    project = container_image['project']
+    project_id = project['id']
+    if project.get('readme_url'):
+        readme_file = project['readme_url'].split('/')[-1]
+        response = gitlab_session_get(
+            f'{config.api.url}{API_SUFFIX}/projects/{project_id}/repository/files/{readme_file}/raw',
+            params={'id': project_id,
+                    'file_path': readme_file,
+                    'ref': 'HEAD'})
 
-            container_images[container_image_id]['readme_md'] = response.text
-            readme_html = markdown(response.text,
-                                   extensions=['attr_list',
-                                               'def_list',
-                                               'fenced_code',
-                                               'md_in_html',
-                                               'tables'])
-            # decrease the size of headers to make the README tab more readable
-            readme_html = readme_html.replace('<h5>', '<h6>').replace('</h5>', '</h6>')
-            readme_html = readme_html.replace('<h4>', '<h6>').replace('</h4>', '</h6>')
-            readme_html = readme_html.replace('<h3>', '<h5>').replace('</h3>', '</h5>')
-            readme_html = readme_html.replace('<h2>', '<h4>').replace('</h2>', '</h4>')
-            readme_html = readme_html.replace('<h1>', '<h3>').replace('</h1>', '</h3>')
-            container_images[container_image_id]['readme_html'] = readme_html
+        container_image['readme_md'] = response.text
+        readme_html = markdown(response.text,
+                               extensions=['attr_list',
+                                           'def_list',
+                                           'fenced_code',
+                                           'md_in_html',
+                                           'tables'])
+        # decrease the size of headers to make the README tab more readable
+        readme_html = readme_html.replace('<h5>', '<h6>').replace('</h5>', '</h6>')
+        readme_html = readme_html.replace('<h4>', '<h6>').replace('</h4>', '</h6>')
+        readme_html = readme_html.replace('<h3>', '<h5>').replace('</h3>', '</h5>')
+        readme_html = readme_html.replace('<h2>', '<h4>').replace('</h2>', '</h4>')
+        readme_html = readme_html.replace('<h1>', '<h3>').replace('</h1>', '</h3>')
+        container_image['readme_html'] = readme_html
 
-    return container_images
+    return container_image
 
 
-def collect_container_images():
+def collect_container_image():
     """
     recursively request information about projects, their container images and their respective tags
     :return: container_images
     """
-    # to speed up development and avoid waiting for Gitlab response dump the latter
-    if config.load_data:
-        import pickle
-        with open('container_images_dump.pickle', 'rb') as pickle_file:
-            container_images = pickle.load(pickle_file)
-    else:
-        # dict for storage of container image info
-        # will be enriched with infos about:
-        # - projects
-        # - tags
-        # - identical revision hashes
-        # - last_update
-        # - age
-        #container_images = dict()
-
-        # collect all projects
-        projects_list = collect_projects()
-
-        for project in [x for x in projects_list if x.get('container_registry_enabled')]:
-            pass
-            # details of every project are to be collected one by one, only from those which
-            container_images = collect_project_container_images2(project)
-
-
-            pass
-
-            if container_images:
-                pass
-
-        # details of every project are to be collected one by one, only from those which
-        container_images = collect_project_container_images(container_images, projects_list)
-        # add tag information
-        container_images = collect_project_container_images_tags(container_images)
-        # add last update and human-readable size information
-        container_images = collect_project_container_images_tags_humanize(container_images)
-        container_images = collect_project_container_images_tags_compare_revisions(container_images)
-        # collect README.md per project
-        container_images = collect_project_container_images_readme(container_images)
-
-    # to speed up development and avoid waiting for Gitlab response dump the latter
-    if config.dump_data:
-        import pickle
-        with open('container_images_dump.pickle', 'wb') as pickle_file:
-            pickle.dump(container_images, pickle_file)
+    # dict for storage of container image info
+    # will be enriched with infos about:
+    # - projects
+    # - tags
+    # - identical revision hashes
+    # - last_update
+    # - age
+    #container_images = dict()
 
     db = couchdb.get_database_object('container_images')
-    for container_image in container_images.values():
-        db.store(container_image['location'], container_image)
 
-    #return container_images
+    # collect all projects
+    projects_list = collect_projects()
+    for project in [x for x in projects_list if x.get('container_registry_enabled')]:
+        # details of every project are to be collected one by one, only from those which
+        container_images = collect_project_container_images(project)
+        if container_images:
+            for container_image in container_images:
+                # add tag information
+                container_image = collect_project_container_images_tag(container_image)
+                # add last update and human-readable size information
+                container_image = collect_project_container_image_tags_humanize(container_image)
+                container_image = collect_project_container_image_tags_compare_revisions(container_image)
+                container_image = collect_project_container_image_readme(container_image)
+
+                db.store(container_image['location'], container_image)
+
 
 def run_collector():
     while True:
-        collect_container_images()
+        collect_container_image()
         sleep(config.update_interval)
 

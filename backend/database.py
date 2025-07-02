@@ -52,11 +52,13 @@ class CouchDBDatabase:
             diff = DeepDiff(document_as_dict, document_content, ignore_order=True)
             # something is strange with 'status', needs to be checked
             # same with 'cleanup_policy_started_at'
-            if 'airflow' in document_id:
-                pass
+
+            bla = set(diff.affected_root_keys)
+            print(dir(diff.affected_root_keys))
+
             if diff.get('values_changed') or \
                 diff.get('affected_root_keys') and \
-                diff.affected_root_keys != set(['_id', '_rev']):
+                set(diff.affected_root_keys) != {'_id', '_rev'}:
                 #diff.affected_root_keys != set(['status', '_id', '_rev']):
                 # diff.affected_root_keys != set(['status', '_id', '_rev']) and \
                 # diff.affected_root_keys != set(['cleanup_policy_started_at', 'status', '_id', '_rev']):

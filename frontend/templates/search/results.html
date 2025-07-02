@@ -18,12 +18,8 @@
     </div>
 {% else %}
     <div class="row pt-5">
-        {% if update_status.initialized %}
-            {% if search_results_count == 0 %}
-                {% include 'search/results/none.html' %}
-            {% endif %}
-        {% else %}
-            {% include 'search/results/update.html' %}
+        {% if search_results_count == 0 %}
+            {% include 'search/results/none.html' %}
         {% endif %}
     </div>
 {% endif %}

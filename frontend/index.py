@@ -8,8 +8,6 @@ from flask import Flask, \
     redirect, \
     render_template_string
 
-from backend.collect import update_status
-
 from frontend.container_image import blueprint as container_image_blueprint
 from frontend.health import blueprint as health_blueprint
 from frontend.search import blueprint as search_blueprint
