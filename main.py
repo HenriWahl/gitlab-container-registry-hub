@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-from sys import exit
-
 from backend.config import config
 
 

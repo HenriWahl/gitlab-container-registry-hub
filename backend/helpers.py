@@ -1,8 +1,19 @@
 import logging
 from os import _exit
+from sys import stdout
 
 
-c
+class Logger():
+    def __init__(self, logger_name: str = '', log_level: str = 'INFO'):
+        """
+        Initialize the logger with a specific name.
+        :param logger_name: Name of the logger
+        """
+        self.logger = logging.getLogger(logger_name)
+        self.logger.setLevel(logging.INFO)
+        # needed for logging to stdout
+        self.logger.addHandler(logging.StreamHandler(stdout))
+
 
 def plural_or_not(count: int, word: str) -> str:
     """

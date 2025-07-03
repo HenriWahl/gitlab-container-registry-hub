@@ -1,10 +1,10 @@
-#from dataclasses import dataclass, \
+# from dataclasses import dataclass, \
 #    field
 from datetime import datetime, \
     timezone
 from hashlib import sha256
 from json import loads
-#from json.decoder import JSONDecodeError
+# from json.decoder import JSONDecodeError
 from time import sleep
 
 from datasize import DataSize
@@ -13,11 +13,16 @@ from dateutil import parser as dateutil_parser, \
 from markdown import markdown
 
 from backend.config import API_SUFFIX, \
-                           config
+    config
 from backend.connection import gitlab_session_get
 from backend.database import couchdb
-from backend.helpers import plural_or_not, \
-    exit
+from backend.helpers import exit, \
+    Logger, \
+    plural_or_not
+
+
+log = Logger('collect').logger
+
 
 def collect_projects() -> list:
     """
@@ -39,6 +44,7 @@ def collect_projects() -> list:
             projects_total_pages = int(response.headers.get('x-total-pages'))
             projects_page += 1
             projects_list += loads(response.text)
+            log.info(f'Collected {len(projects_list)} projects')
         elif response.status_code == 401:
             # when token is unauthorized exit immediately
             exit(f'status_code: {response.status_code} text: {response.text}')
@@ -80,6 +86,7 @@ def collect_project_container_images(project) -> dict:
             container_image['name'] = container_image['location']
             container_image['hash'] = sha256(container_image['location'].encode()).hexdigest()
             result.append(container_image)
+
     return result
 
 
@@ -102,6 +109,7 @@ def collect_project_container_images_tag(container_image: dict) -> dict:
         tags[tag_name] = loads(response.text)
     # overwrite tags with more detailed info
     container_image['tags'] = tags
+
     return container_image
 
 
@@ -143,7 +151,7 @@ def collect_project_container_image_tags_humanize(container_image: dict) -> dict
     # get age of a container image
     # relativedelta adds all other units like 'years=0' which makes it better comparable
     age = relativedelta.relativedelta(NOW, container_image['last_update'])
-    #container_images['age'] = age
+    # container_images['age'] = age
     # store creation date as difference between now and age
     container_image['created'] = NOW - age
     # get a human-readable version of age to be read by humans
@@ -235,11 +243,12 @@ def collect_container_image():
     # - identical revision hashes
     # - last_update
     # - age
-    #container_images = dict()
+    # container_images = dict()
 
     db = couchdb.get_database_object('container_images')
 
     # collect all projects
+    log.info('Collecting projects...')
     projects_list = collect_projects()
     for project in [x for x in projects_list if x.get('container_registry_enabled')]:
         # details of every project are to be collected one by one, only from those which
@@ -250,16 +259,17 @@ def collect_container_image():
                 container_image = collect_project_container_images_tag(container_image)
                 # only store container images which have tags
                 if container_image['tags']:
+                    log.info(f"Collected container image tags: {container_image["location"]} {sorted(container_image['tags'].keys())}")
                     # add last update and human-readable size information
                     container_image = collect_project_container_image_tags_humanize(container_image)
                     container_image = collect_project_container_image_tags_compare_revisions(container_image)
                     container_image = collect_project_container_image_readme(container_image)
-
+                    # put container image info into database
                     db.store(container_image['location'], container_image)
+                    log.info(f"Stored container image: {container_image["location"]} into database")
 
 
 def run_collector():
     while True:
         collect_container_image()
         sleep(config.update_interval)
-
