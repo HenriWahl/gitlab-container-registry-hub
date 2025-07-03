@@ -1,16 +1,15 @@
 from datetime import datetime
-from json import dumps
 from time import sleep
 from urllib.parse import quote
 
 from couchdb3 import Document, \
     Server
 from dateutil.relativedelta import relativedelta
-from deepdiff import DeepDiff, \
-    Delta
+from deepdiff import DeepDiff
 
 from backend.config import config, \
     TIMEOUT
+from backend.helpers import log
 
 
 class CouchDBDatabase:
@@ -31,8 +30,10 @@ class CouchDBDatabase:
                                   ddoc='hash')
         self._database.save_index(index={'fields': ['path']},
                                   ddoc='path')
+        self._database.save_index(index={'fields': ['registry']},
+                                  ddoc='registry')
 
-    def store(self, document_id: str, document_content: dict) -> Document:
+    def store_by_id(self, document_id: str, document_content: dict) -> Document:
         # quoting is necessary to avoid IDs being cut of at '/'s
         document_id_quoted = quote(document_id, safe='')
         document = self._database.get(document_id_quoted)
@@ -54,7 +55,6 @@ class CouchDBDatabase:
                 self._database.save(document)
         else:
             self._database.save({**{'_id': document_id_quoted}, **document_content})
-
         return self._database.get(document_id)
 
     def find(self, selector=dict(), use_index=None):
@@ -64,6 +64,22 @@ class CouchDBDatabase:
         if 'warning' in result:
             print(result['warning'])
         return result.get('docs', list())
+
+    def delete_by_document(self, document):
+        """
+        Delete a document from the database.
+        :param document: document to delete
+        """
+        # quoting is necessary to avoid IDs being cut of at '/'s
+        document_id_quoted = quote(document['_id'], safe='')
+        revision = document.get('_rev')
+        try:
+            self._database.delete(docid=document_id_quoted, rev=revision)
+        except Exception as exception:
+            log.error(exception)
+            return False
+        return True
+
 
 
 class CouchDBServer:

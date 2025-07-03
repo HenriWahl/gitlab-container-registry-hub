@@ -17,11 +17,8 @@ from backend.config import API_SUFFIX, \
 from backend.connection import gitlab_session_get
 from backend.database import couchdb
 from backend.helpers import exit, \
-    Logger, \
+    log, \
     plural_or_not
-
-
-log = Logger('collect').logger
 
 
 def collect_projects() -> list:
@@ -254,8 +251,27 @@ def collect_container_images(projects_list: list = None) -> None:
                     container_image = collect_project_container_image_tags_compare_revisions(container_image)
                     container_image = collect_project_container_image_readme(container_image)
                     # put container image info into database
-                    db.store(container_image['location'], container_image)
+                    db.store_by_id(container_image['location'], container_image)
                     log.info(f"Stored container image: {container_image["location"]} into database")
+
+
+def clean_container_images(projects_list: list):
+    """
+    clean up container images database
+    :return:
+    """
+    db = couchdb.get_database_object('container_images')
+    # delete all container images
+    documents = db.find(selector={'registry': config.registry}, use_index='registry')
+    project_ids = [project.get('id') for project in projects_list]
+    for document in documents:
+        # delete all container images which are not part of the current projects
+        if document.get('project_id') not in project_ids:
+            log.info(f"Deleting container image {document.get('name')} from database")
+            db.delete_by_document(document)
+
+    log.info('Cleaned up container images database')
+
 
 
 def run_collector():
@@ -263,4 +279,5 @@ def run_collector():
         log.info('Collecting projects...')
         projects_list = collect_projects()
         collect_container_images(projects_list)
+        clean_container_images(projects_list)
         sleep(config.update_interval)

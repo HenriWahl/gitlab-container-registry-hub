@@ -39,3 +39,4 @@ def exit(message='', code=1):
     _exit(code)
 
 
+log = Logger('collect').logger
