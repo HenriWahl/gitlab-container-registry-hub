@@ -43,9 +43,6 @@ class CouchDBDatabase:
             elif isinstance(value, relativedelta):
                 # convert datetime to string
                 document_content[key] = str(value)
-            # elif value == None:
-            #     #document_content[key] = str(value)
-            #     document_content[key] = ''
 
         if document:
             document_as_dict = dict(document)

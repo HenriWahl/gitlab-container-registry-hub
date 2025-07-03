@@ -84,6 +84,7 @@ def collect_project_container_images(project) -> dict:
             container_image['project'] = project
             # fix name which basically is the same as path
             container_image['name'] = container_image['location']
+            container_image['registry'] = container_image['location'].split('/')[0]
             container_image['hash'] = sha256(container_image['location'].encode()).hexdigest()
             result.append(container_image)
 
@@ -231,25 +232,13 @@ def collect_project_container_image_readme(container_image: dict) -> dict:
     return container_image
 
 
-def collect_container_image():
+def collect_container_images(projects_list: list = None) -> None:
     """
     recursively request information about projects, their container images and their respective tags
     :return: container_images
     """
-    # dict for storage of container image info
-    # will be enriched with infos about:
-    # - projects
-    # - tags
-    # - identical revision hashes
-    # - last_update
-    # - age
-    # container_images = dict()
-
     db = couchdb.get_database_object('container_images')
 
-    # collect all projects
-    log.info('Collecting projects...')
-    projects_list = collect_projects()
     for project in [x for x in projects_list if x.get('container_registry_enabled')]:
         # details of every project are to be collected one by one, only from those which
         container_images = collect_project_container_images(project)
@@ -270,6 +259,8 @@ def collect_container_image():
 
 
 def run_collector():
-    while True:
-        collect_container_image()
+    while True:    # collect all projects
+        log.info('Collecting projects...')
+        projects_list = collect_projects()
+        collect_container_images(projects_list)
         sleep(config.update_interval)

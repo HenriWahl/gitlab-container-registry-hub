@@ -43,3 +43,5 @@ parser.add_argument('--update-interval', type=int, default=1800, required=False)
 
 # load everything else from config file
 config = load_config(parser.parse_args())
+
+pass
