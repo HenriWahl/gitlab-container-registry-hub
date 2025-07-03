@@ -3,7 +3,7 @@
         <div class="col-3 mb-1">
             <div class="input-group">
                 <input class="form-control" type="search"
-                       hx-post="/container_image/{{ container_image.id }}/tab/tags/filter"
+                       hx-post="/container_image/{{ container_image.hash }}/tab/tags/filter"
                        hx-target="#filtered_tags"
                        hx-trigger="keyup changed delay:10ms, search"
                        class="form-control mx-auto"

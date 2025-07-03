@@ -1,4 +1,8 @@
+import logging
 from os import _exit
+
+
+c
 
 def plural_or_not(count: int, word: str) -> str:
     """
@@ -22,3 +26,5 @@ def exit(message='', code=1):
     """
     print(message)
     _exit(code)
+
+

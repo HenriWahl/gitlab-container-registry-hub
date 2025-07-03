@@ -72,7 +72,7 @@ def process_search_request(request=None, session=None, search_string: str = ''):
     #     if search_string.lower() in name.lower():
     #         search_results.update({name: container_image})
 
-    search_results_db = db.find(selector={'name': {'$regex': f'.*{search_string.lower()}.*'}}, use_index='name')
+    search_results_db = db.find(selector={'path': {'$regex': f'.*{search_string.lower()}.*'}}, use_index='path')
 
     if isinstance(search_results_db, list):
         # sort by sort_order

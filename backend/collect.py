@@ -2,6 +2,7 @@
 #    field
 from datetime import datetime, \
     timezone
+from hashlib import sha256
 from json import loads
 #from json.decoder import JSONDecodeError
 from time import sleep
@@ -77,6 +78,7 @@ def collect_project_container_images(project) -> dict:
             container_image['project'] = project
             # fix name which basically is the same as path
             container_image['name'] = container_image['location']
+            container_image['hash'] = sha256(container_image['location'].encode()).hexdigest()
             result.append(container_image)
     return result
 

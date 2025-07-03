@@ -21,20 +21,20 @@ container_image_TABS = ['tags', 'readme']
 blueprint = Blueprint(Path(__file__).stem, __name__)
 
 
-@blueprint.route('/<int:container_image_id>/tab/<tab>/filter', methods=['GET', 'POST'])
-@blueprint.route('/<int:container_image_id>/tab/<tab>', methods=['GET'])
-@blueprint.route('/<int:container_image_id>', methods=['GET'])
-def container_image(container_image_id: int = None, tab=None):
+@blueprint.route('/<container_image_hash>/tab/<tab>/filter', methods=['GET', 'POST'])
+@blueprint.route('/<container_image_hash>/tab/<tab>', methods=['GET'])
+@blueprint.route('/<container_image_hash>', methods=['GET'])
+def container_image(container_image_hash: int = None, tab=None):
     """
     Requests regarding container details are processed here
-    :param container_image_id:
+    :param container_image_hash:
     :param tab:
     :return:
     """
     search_string = ''
     filter_string = ''
 
-    search_result_db = db.find(selector={'id': container_image_id}, use_index='id')
+    search_result_db = db.find(selector={'hash': container_image_hash}, use_index='hash')
 
     pass
     # only process if there was a valid container involved
@@ -79,7 +79,7 @@ def container_image(container_image_id: int = None, tab=None):
                 container_image = container_image_filtered
         return render_template(template,
                                container_image=container_image,
-                               container_image_id=container_image_id,
+                               container_image_hash=container_image_hash,
                                container_image_TABS=container_image_TABS,
                                is_htmx=is_htmx(),
                                search_string=search_string,

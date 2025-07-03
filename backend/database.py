@@ -25,12 +25,12 @@ class CouchDBDatabase:
         """
         self._name = name
         self._database = server.get_database_from_server(name)
-        index_name = self._database.save_index(index={'fields': ['name']},
+        self._database.save_index(index={'fields': ['name']},
                                   ddoc='name')
-        index_id = self._database.save_index(index={'fields': ['id']},
-                                  ddoc='id',
-                                  name='id')
-        pass
+        self._database.save_index(index={'fields': ['hash']},
+                                  ddoc='hash')
+        self._database.save_index(index={'fields': ['path']},
+                                  ddoc='path')
 
     def store(self, document_id: str, document_content: dict) -> Document:
         # quoting is necessary to avoid IDs being cut of at '/'s
@@ -51,8 +51,8 @@ class CouchDBDatabase:
             document_as_dict = dict(document)
             diff = DeepDiff(document_as_dict, document_content, ignore_order=True)
             if diff.get('values_changed') or \
-                diff.get('affected_root_keys') and \
-                set(diff.affected_root_keys) != {'_id', '_rev'}:
+                    diff.get('affected_root_keys') and \
+                    set(diff.affected_root_keys) != {'_id', '_rev'}:
                 document.update({**{'_id': document_id_quoted}, **document_content})
                 self._database.save(document)
         else:
@@ -62,8 +62,8 @@ class CouchDBDatabase:
 
     def find(self, selector=dict(), use_index=None):
         result = self._database.find(selector=selector,
-                                    use_index=use_index,
-                                    limit=99999999)
+                                     use_index=use_index,
+                                     limit=99999999)
         if 'warning' in result:
             print(result['warning'])
         return result.get('docs', list())
@@ -122,7 +122,8 @@ class CouchDBServer:
         if database_name not in self._server.all_dbs():
             self._server.create(database_name)
         return CouchDBDatabase(self, database_name)
-        #return self._server.get(database_name)
+        # return self._server.get(database_name)
+
 
 # connect to CouchDB server
 couchdb = CouchDBServer(config)

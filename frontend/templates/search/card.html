@@ -6,9 +6,10 @@
                     <div class="row">
                         <div class="col">
                             <h5>
-                                <a href="/container_image/{{ container_image['id'] }}"
+{#                                <a href="/container_image/{{ container_image['id'] }}"#}
+                                <a href="/container_image/{{ container_image['hash'] }}"
                                    hx-boost="true"
-                                   hx-get="/container_image/{{ container_image['id'] }}"
+                                   hx-get="/container_image/{{ container_image['hash'] }}"
                                    hx-target="#content"
                                    hx-push-url="true"
                                    hx-vals='{"search_string": "{{ search_string }}"}'
