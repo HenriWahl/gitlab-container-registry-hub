@@ -246,12 +246,14 @@ def collect_container_image():
             for container_image in container_images:
                 # add tag information
                 container_image = collect_project_container_images_tag(container_image)
-                # add last update and human-readable size information
-                container_image = collect_project_container_image_tags_humanize(container_image)
-                container_image = collect_project_container_image_tags_compare_revisions(container_image)
-                container_image = collect_project_container_image_readme(container_image)
+                # only store container images which have tags
+                if container_image['tags']:
+                    # add last update and human-readable size information
+                    container_image = collect_project_container_image_tags_humanize(container_image)
+                    container_image = collect_project_container_image_tags_compare_revisions(container_image)
+                    container_image = collect_project_container_image_readme(container_image)
 
-                db.store(container_image['location'], container_image)
+                    db.store(container_image['location'], container_image)
 
 
 def run_collector():
