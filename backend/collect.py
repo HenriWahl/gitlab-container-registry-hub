@@ -69,22 +69,31 @@ def collect_project_container_images(project) -> dict:
     result = list()
 
     project_id = project.get('id')
-    response = gitlab_session_get(f'{config.api.url}{API_SUFFIX}/projects/{project_id}/registry/repositories',
-                                  params={'tags': True,
-                                          'tags_count': True,
-                                          'size': True})
-    repositories = loads(response.text)
+
+    try:
+        response = gitlab_session_get(f'{config.api.url}{API_SUFFIX}/projects/{project_id}/registry/repositories',
+                                      params={'tags': True,
+                                              'tags_count': True,
+                                              'size': True})
+        repositories = loads(response.text)
+    except Exception as exception:
+        log.error(f"Error collecting container images for project {project_id}: {exception}")
+        log.error(f"Project data: {project}")
+        repositories = list()
 
     if repositories:
         # collect all images of a project
         for container_image in repositories:
-            container_image['project'] = project
-            # fix name which basically is the same as path
-            container_image['name'] = container_image['location']
-            container_image['registry'] = container_image['location'].split('/')[0]
-            container_image['hash'] = sha256(container_image['location'].encode()).hexdigest()
-            result.append(container_image)
-
+            try:
+                container_image['project'] = project
+                # fix name which basically is the same as path
+                container_image['name'] = container_image['location']
+                container_image['registry'] = container_image['location'].split('/')[0]
+                container_image['hash'] = sha256(container_image['location'].encode()).hexdigest()
+                result.append(container_image)
+            except Exception as exception:
+                log.error(f"Error collecting container image for project {project_id}: {exception}")
+                log.error(f"Container image data: {container_image}")
     return result
 
 
@@ -232,7 +241,6 @@ def collect_project_container_image_readme(container_image: dict) -> dict:
 def collect_container_images(projects_list: list = None) -> None:
     """
     recursively request information about projects, their container images and their respective tags
-    :return: container_images
     """
     db = couchdb.get_database_object('container_images')
 
@@ -258,26 +266,32 @@ def collect_container_images(projects_list: list = None) -> None:
 def clean_container_images(projects_list: list):
     """
     clean up container images database
-    :return:
     """
     db = couchdb.get_database_object('container_images')
-    # delete all container images
+    # get documents of the current registry
     documents = db.find(selector={'registry': config.registry}, use_index='registry')
+    # get all project IDs from the projects list
     project_ids = [project.get('id') for project in projects_list]
     for document in documents:
-        # delete all container images which are not part of the current projects
+        # delete all container images that are not part of the current projects
         if document.get('project_id') not in project_ids:
             log.info(f"Deleting container image {document.get('name')} from database")
             db.delete_by_document(document)
-
     log.info('Cleaned up container images database')
 
 
-
 def run_collector():
-    while True:    # collect all projects
+    """
+    run the collector in a loop
+    :return:
+    """
+    while True:
         log.info('Collecting projects...')
+        # get list of projects
         projects_list = collect_projects()
-        collect_container_images(projects_list)
-        clean_container_images(projects_list)
+        if projects_list:
+            # get details of container images of all projects
+            collect_container_images(projects_list)
+            # clean up container images database - delete not anymore existing container images
+            clean_container_images(projects_list)
         sleep(config.update_interval)
