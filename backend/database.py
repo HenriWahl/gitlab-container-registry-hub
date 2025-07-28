@@ -90,10 +90,7 @@ class CouchDBServer:
         Connect to CouchDB server using the configuration settings.
         :return: CouchDB server instance
         """
-
-        self._server = None
-
-        while not self._server:
+        while True:
             try:
                 self._server = Server(
                     config.couchdb.url,
@@ -101,6 +98,9 @@ class CouchDBServer:
                     password=config.couchdb.password,
                     timeout=TIMEOUT
                 )
+                # test connection by retrieving all databases
+                self._server.all_dbs()
+                break
             except Exception as exception:
                 print(f"Error connecting to CouchDB: {exception}")
                 sleep(10)
