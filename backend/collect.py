@@ -44,8 +44,10 @@ def collect_projects() -> list:
             log.info(f'Collected {len(projects_list)} projects')
         elif response.status_code == 401:
             # when token is unauthorized exit immediately
+            log.error(f'Token is expired or unauthorized')
             exit(f'status_code: {response.status_code} text: {response.text}')
         else:
+            log.error(f'status_code: {response.status_code} text: {response.text}')
             print(f'status_code: {response.status_code} text: {response.text}')
             # try agin after a short nap
             sleep(20)
