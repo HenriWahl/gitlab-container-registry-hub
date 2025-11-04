@@ -12,7 +12,7 @@
     </div>
     <div class="col-8 d-flex justify-content-end">
         <div class="btn-group bg-white text-white me-2" role="group">
-            {% for sort_by in SORTABLE_BY %}
+            {% for sort_by in SORTABLE_BY.keys() %}
             <input type="radio" class="btn-check" name="sort_by" id="sort_by_{{ sort_by }}"
                    autocomplete="off"
                    {% if sort_by== session['sort_by'] %}

@@ -3,15 +3,21 @@
         {% include 'container_image/tags_count.html' %}
     </div>
 </div>
-<div class="row mb-2">
+<div class="row mb-1">
     <div class="col" title="date of creation of last tag">
-        <i class="bi bi-cloud-arrow-up-fill"></i> {{container_image['age_human_readable']
-        }} ago
+        <i class="bi bi-cloud-arrow-up-fill"></i> {{ container_image['age_human_readable'] }} ago
     </div>
 </div>
+{% if container_image['size'] %}
+<div class="row mb-2">
+    <div class="col" title="size">
+        <i class="bi bi-database-fill"></i> {{ container_image['size_human_readable'] }}
+    </div>
+</div>
+{% endif %}
 <div class="row">
     <div class="col" title="link to Gitlab repository of project">
-        <a href="{{ container_image['project']['web_url']}}"
+        <a href="{{ container_image['project']['web_url'] }}"
            target="_blank"><i
                 class="bi bi-git"></i> git repository</a>
     </div>

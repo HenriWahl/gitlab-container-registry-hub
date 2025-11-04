@@ -136,6 +136,8 @@ def collect_project_container_image_tags_humanize(container_image: dict) -> dict
     container_image['last_update_tag'] = ''
     # 'tag' will be identical to 'last_update_tag' and stored for sortability in the UI
     container_image['tag'] = ''
+    # the whole sum of all images tags
+    container_image['size'] = 0
     # get last update date
     for tag in container_image['tags'].values():
         # parse time string from Gitlab into datetime object
@@ -152,10 +154,14 @@ def collect_project_container_image_tags_humanize(container_image: dict) -> dict
                 container_image['last_update_tag'] = tag['name']
                 container_image['tag'] = tag['name']
             # add human-readable tag image size
-            tag['total_size_human_readable'] = '{:.2MiB}'.format(DataSize(tag['total_size']))
+            tag['total_size_human_readable'] = '{:.2a}'.format(DataSize(tag['total_size']))
             # add human-readable tag creation date
             tag['created_at_human_readable'] = dateutil_parser.parse(tag['created_at']).strftime(
                 '%Y-%m-%d %H:%M:%S')
+            # add size of this tag to total size of container image
+            container_image['size'] += tag['total_size']
+    # human-readable version of sum of total_size
+    container_image['size_human_readable'] =  '{:.2a}'.format(DataSize(container_image['size']))
 
     # get age of a container image
     # relativedelta adds all other units like 'years=0' which makes it better comparable

@@ -13,7 +13,11 @@ from backend.database import couchdb
 
 from frontend.misc import is_htmx
 
-SORTABLE_BY = ['name', 'created', 'tag']
+# sorting keys and their defaults
+SORTABLE_BY = {'name': '',
+               'created': '1970-01-01T00:00:00.000000+00:00',
+               'size': 0,
+               'tag': ''}
 SORT_ORDERS = {'up': False, 'down': True}
 RESULTS_PER_PAGE = 10
 
@@ -37,15 +41,15 @@ def process_search_request(request=None, session=None, search_string: str = ''):
         if session.get('sort_by'):
             sort_by = session['sort_by']
         else:
-            sort_by = SORTABLE_BY[0]
+            sort_by = list(SORTABLE_BY.keys())[0]
             session['sort_by'] = sort_by
-    elif request.args.get('sort_by') in SORTABLE_BY:
+    elif request.args.get('sort_by') in SORTABLE_BY.keys():
         sort_by = request.args['sort_by']
         session['sort_by'] = sort_by
     elif session.get('sort_by'):
         sort_by = session['sort_by']
     else:
-        sort_by = SORTABLE_BY[0]
+        sort_by = list(SORTABLE_BY.keys)[0]
         session['sort_by'] = sort_by
     # 'sort_order' is either set by request or found in session and may be ascending or descending
     if not request.args.get('sort_order'):
@@ -76,8 +80,8 @@ def process_search_request(request=None, session=None, search_string: str = ''):
 
     if isinstance(search_results_db, list):
         # sort by sort_order
-        search_results_sorted = dict(sorted( { x.get('name'): x for x in search_results_db }.items(),
-                                            key=lambda x: x[1][sort_by],
+        search_results_sorted = dict(sorted({x.get('name'): x for x in search_results_db}.items(),
+                                            key=lambda x: x[1].get(sort_by, SORTABLE_BY[sort_by]),
                                             reverse=SORT_ORDERS.get(sort_order)))
     else:
         search_results_sorted = dict()
