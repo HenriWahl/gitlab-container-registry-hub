@@ -48,8 +48,6 @@ class CouchDBDatabase:
         if document:
             document_as_dict = dict(document)
             diff = DeepDiff(document_as_dict, document_content, ignore_order=True)
-            print(diff.get('values_changed'))
-            print(diff.get('affected_root_keys'))
             if diff.get('values_changed') or \
                     diff.get('affected_root_keys') and \
                     set(diff.affected_root_keys) != {'_id', '_rev'} or \
