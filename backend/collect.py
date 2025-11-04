@@ -67,9 +67,7 @@ def collect_project_container_images(project) -> dict:
     :param projects_list:
     :return:
     """
-
     result = list()
-
     project_id = project.get('id')
 
     try:
@@ -97,6 +95,26 @@ def collect_project_container_images(project) -> dict:
                 log.error(f"Error collecting container image for project {project_id}: {exception}")
                 log.error(f"Container image data: {container_image}")
     return result
+
+
+def collect_project_container_images_size(container_image: dict) -> dict:
+    """
+    get all tags of a container repository of a project
+    :param container_image:
+    :return:
+    """
+    container_image_id = container_image['id']
+    try:
+        response = gitlab_session_get(
+            f'{config.api.url}{API_SUFFIX}/registry/repositories/{container_image_id}',
+            params={'size': True})
+        pass
+        #tags[tag_name] = loads(response.text)
+        # overwrite tags with more detailed info
+        #container_image['tags'] = tags
+    except Exception as exception:
+        log.error(f"Container image data: {container_image}")
+    return container_image
 
 
 def collect_project_container_images_tag(container_image: dict) -> dict:
@@ -257,6 +275,8 @@ def collect_container_images(projects_list: list = None) -> None:
         container_images = collect_project_container_images(project)
         if container_images:
             for container_image in container_images:
+                # add size information
+                container_image = collect_project_container_images_size(container_image)
                 # add tag information
                 container_image = collect_project_container_images_tag(container_image)
                 # only store container images which have tags
