@@ -9,11 +9,18 @@
     </div>
 </div>
 {% if container_image['size'] %}
-<div class="row mb-2">
-    <div class="col" title="size">
-        <i class="bi bi-database-fill"></i> {{ container_image['size_human_readable'] }}
+    {% if container_image['project']['container_expiration_policy']['enabled'] %}
+        {% set expiration_policy_icon='bi-recycle text-success' %}
+        {% set expiration_policy_text='enabled' %}
+    {% else %}
+        {% set expiration_policy_icon='bi-infinity text-danger' %}
+        {% set expiration_policy_text='disabled' %}
+    {% endif %}
+    <div class="row mb-2">
+        <div class="col" title="summarized size of images with expiration policy {{ expiration_policy_text }}">
+            <i class="bi bi-database-fill"></i> {{ container_image['size_human_readable'] }} <i class="bi {{ expiration_policy_icon }}"></i>
+        </div>
     </div>
-</div>
 {% endif %}
 <div class="row">
     <div class="col" title="link to Gitlab repository of project">
